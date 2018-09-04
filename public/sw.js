@@ -1,7 +1,7 @@
 self.addEventListener("install", (e) => {
     e.waitUntil(
         caches.open("notepad").then((cache) => {
-            cache.addAll(['/index.html']);
+            cache.addAll(['https://tino-indexdb-noteapp.herokuapp.com/index.html']);
         })
     );
     console.log("aaa");
