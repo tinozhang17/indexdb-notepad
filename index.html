@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Persistent Notepad</title>
+    <style>
+        html {
+            font-size: 10px;
+            font-family: sans-serif;
+        }
+
+        body {
+            font-size: 1.6rem;
+            width: 100%;
+            max-width: 82rem;
+            margin: 0 auto;
+            transform: rotate(0);
+        }
+
+        body>* {
+            padding: 0.5rem 2rem;
+        }
+
+        .invisible {
+            display: none !important;
+        }
+        
+        .animate-in {
+            -webkit-animation: fade-in 0.7s ease-out 1 both;
+            -o-animation: fade-in 0.7s ease-out 1 both;
+            animation: fade-in 0.7s ease-out 1 both;
+        }
+
+        .warning-box {
+            background-color: lightcoral;
+            margin: 0 auto;
+        }
+
+        header, footer {
+            background-color: #66cdaa;
+            color: #fff;
+        }
+
+        header h2 {
+            margin: 0.1em;
+        }
+
+        .note, .form {
+            color: #333333;
+        }
+
+        .note h2 {
+            margin-bottom: 1rem;
+            line-height: 0.2em;
+        }
+
+        .note-toolbar {
+            border-bottom: 0.3rem dashed lightgrey;
+            padding: 0.4em 0;
+        }
+
+        .note-toolbar div {
+            display: inline-block;
+            width: 5%;
+            line-height: 3rem;
+        }
+
+        .note-toolbar__complete-button {
+            background-color: #66cdaa;
+            color: #fff;
+            border: 0.05em solid #aaaaaa;
+            width: 3em;
+            font-size: 1em;
+        }
+
+        .note-toolbar__complete-button:hover {
+            background-color: #75d2b2;
+            color: #fff;
+
+        }
+
+        .note-toolbar__complete-button:active {
+            box-shadow: inset -0.05em -0.05em 0.05em #ffffff, inset 0.05em 0.05em 0.05em #51a488;
+        }
+
+        .note-list {
+            list-style: none;
+            position: relative;
+            overflow: scroll;
+            height: 39.8rem;
+            max-height: 39.8rem;
+            margin: 0;
+        }
+
+        .note-list__note {
+            padding-left: 2rem;
+        }
+
+        .note-list__note p {
+            overflow-wrap: break-word;
+            line-height: 1.5em;
+        }
+
+        .note-list__note:nth-child(even) {
+            border-left: 0.3em solid #adadad;
+        }
+
+        .note-list__note:nth-child(odd) {
+            border-left: 0.3em solid #66cdaa;
+        }
+
+        .note-list__note__checkbox {
+            position: absolute;
+            left: 0;
+        }
+
+        .note-list__note__title {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .no-note-box {
+            position: absolute;
+            top: 30%;
+            right: 10%;
+            left: 10%;
+        }
+
+        .form {
+            background-color: lightgray;
+            padding: 0.1rem 2rem;
+        }
+
+        .form h2 {
+            margin: 0.5em 0;
+        }
+
+        .form div {
+            display: flex;
+            margin-bottom: 1em;
+            width: 70%;
+        }
+
+        .form div label {
+            width: 20%;
+            vertical-align: middle;
+            padding: 0.2em 0;
+        }
+
+        #form__note-text,
+        #form__note-title {
+            border: none;
+            width: 80%;
+            padding: 0.2em;
+            font-family: monospace;
+            font-size: inherit;
+        }
+
+        #form__warning {
+            font-size: 0.8em;
+            color: darkred;
+        }
+
+        #form__warning p {
+            margin: 0;
+        }
+
+        #form__button {
+            width: 50%;
+            font-size: inherit;
+            border: none;
+            background-color: #66cdaa;
+            color: white;
+            padding: 0.4rem 0;
+            border-radius: 0.3rem;
+            box-shadow: 0.05em 0.05em 0.1em grey;
+            text-shadow: 0.05em 0.05em 0 grey;
+        }
+
+        #form__button:hover,
+        #form__button:active {
+            background-color: #75d2b2;
+        }
+
+        #form__button:active {
+            box-shadow: inset 0.05em 0.05em 0.1em grey;
+        }
+
+        footer p {
+            text-align: center;
+            margin: 0.1em;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                margin-left: 30%;
+            }
+
+            to {
+                opacity: 1;
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .form div {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .note-list {
+                max-height: 32.8rem;
+            }
+
+            .form div {
+                display: block;
+            }
+
+            .form div label,
+            #form__note-text,
+            #form__note-title,
+            #form__button {
+                display: block;
+                width: 100%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<p class="warning-box invisible"></p>
+
+<header role="banner">
+    <h2>My Notepad</h2>
+</header>
+
+<main class="note" role="main">
+    <!--<h2>Notes</h2>-->
+    <div class="note-toolbar" role="navigation" aria-live="polite">
+        <div>
+            <input type="checkbox" class="note-toolbar__checkbox">
+        </div>
+        <div>
+            <button class="note-toolbar__complete-button invisible" aria-label="Remove Note"><i class="fas fa-trash-alt"></i></button>
+        </div>
+    </div>
+    <ul class="note-list" role="article">
+    </ul>
+    <div>
+        <p class="no-note-box invisible" tabindex="-1">
+            <em>
+                You don't have any notes. Add a new note by using the form below.
+            </em>
+        </p>
+    </div>
+
+</main>
+
+<aside class="form" role="complementary">
+    <h2>Enter a new note</h2>
+    <form>
+        <div>
+            <label for="form__note-title">Note Title:</label>
+            <input type="text" id="form__note-title" maxlength="50">
+        </div>
+        <div>
+            <label for="form__note-text">Note Text:</label>
+            <textarea id="form__note-text" rows="4" cols="50" maxlength="300"></textarea>
+        </div>
+        <div id="form__warning" class="invisible" tabindex="-1" aria-relevant="all">
+            <p>Please enter at least one of Note Title or Note Text</p>
+        </div>
+        <div>
+            <button id="form__button" type="submit">Create New Note</button>
+        </div>
+    </form>
+</aside>
+
+<footer>
+    <p role="contentinfo">Copyright &copy; Tino Zhang</p>
+</footer>
+
+<script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
+<script defer>
+
+    window.onload = function () {
+        var db;
+        var numVisibleNotes = 0; // records the number of visible notes
+
+        /* Open the database and create Object Store if needed */
+        function openDB() {
+            var dbRequest = window.indexedDB.open("NoteDB", 1);
+
+            dbRequest.addEventListener("success", (e) => {
+                db = e.target.result;
+
+                db.onerror = (e) => {
+                    warningBox.innerHTML = `Error occured in the database. ${e.target.code}: ${e.target.message}`;
+                    warningBox.classList.remove("invisible");
+                };
+
+                //The onversionchange event handler of the IDBDatabase interface handles the versionchange event, fired when a database structure change (IDBOpenDBRequest.onupgradeneeded event or IDBFactory.deleteDatabase) was requested elsewhere (most probably in another window/tab on the same computer).
+                db.onversionchange = (e) => {
+                    if(!window.alert("A database change has occurred somewhere else. This page will be reloaded.")) {
+                        window.location.reload();
+                    }
+                };
+
+                queryAllNotes(db);
+            });
+
+            dbRequest.addEventListener("error", (e) => {
+                warningBox.innerHTML = `Error opening database. ${e.target.code}: ${e.target.message}`;
+                warningBox.classList.remove("invisible");
+            });
+
+            // Once this event has been handled, the onsucess event of the dbRequest will be triggered
+            dbRequest.addEventListener("upgradeneeded", (e) => {
+                db = e.target.result;
+                var objStore = db.createObjectStore("note", {keyPath: "id", autoIncrement: true});
+            });
+        }
+
+        /* Query all notes in first-in-first-out order, and display them. */
+        function queryAllNotes(db) {
+            var noteObjStore = db.transaction("note").objectStore("note");
+            noteObjStore.openCursor().onsuccess = (e) => {
+                var cursor = e.target.result;
+                if (cursor) {
+                    createNoteElement(cursor.value);
+                    cursor.continue();
+                }
+                checkVisibleNotes();
+            };
+        }
+
+        /* Check if there is any visible notes */
+        function checkVisibleNotes() {
+            if (!numVisibleNotes) {
+                noNoteBox.classList.remove("invisible");
+                noteToolbar.classList.add("invisible");
+                noNoteBox.focus();
+            } else {
+                noNoteBox.classList.add("invisible");
+                noteToolbar.classList.remove("invisible");
+            }
+        }
+
+        /* Create a note object, and add it into the database; returns a promise with the added note object or an error message */
+        function addNote(title, text) {
+            return new Promise((resolve, reject) => {
+                if (!title) {
+                    title = "Untitled";
+                }
+
+                if (!text) {
+                    text = "No Description";
+                }
+
+                let request = db.transaction("note", "readwrite").objectStore("note").add({title: title, text: text});
+
+                request.onsuccess = (e) => {
+                    resolve({title: title, text: text, id: e.target.result});
+                };
+
+                request.onerror = (e) => {
+                    reject(Error(`Note cannot be added.\n${e.target.code}: ${e.target.message}`));
+                };
+            });
+        }
+
+        /* Delete a note object from the database by note id. Remove it from the interface. */
+        function deleteNote(id, all=false) {
+            return new Promise((resolve, reject) => {
+                let request;
+                if (all) {
+                    request = db.transaction("note", "readwrite").objectStore("note").clear();
+                } else {
+                    request = db.transaction("note", "readwrite").objectStore("note").delete(id);
+                }
+
+                request.onsuccess = (e) => {
+                    resolve(true);
+                };
+
+                request.onerror = (e) => {
+                    reject(Error(`An error occured when attempting to delete note.\n${e.target.code}: ${e.target.message}`));
+                }
+            });
+        }
+
+        /* Create a DOM element from a note object --- */
+        var noteList = document.querySelector(".note-list");
+
+        function createNoteElement(note) {
+            let li = document.createElement("li");
+            li.classList.add("note-list__note");
+            li.classList.add("animate-in");
+            let checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.classList.add("note-list__note__checkbox");
+            checkbox.dataset.recordIndex = note.id;
+            let noteTitle = document.createElement("p");
+            noteTitle.classList.add("note-list__note__title");
+            noteTitle.innerHTML = note.title;
+            let noteDesc = document.createElement("p");
+            noteDesc.innerHTML = note.text;
+            li.appendChild(checkbox);
+            li.appendChild(noteTitle);
+            li.appendChild(noteDesc);
+            noteList.insertBefore(li, noteList.firstElementChild);
+            numVisibleNotes++;
+        }
+        /* --- Create a DOM element from a note object */
+
+        /* Form submission behavior */
+        const formNoteTitle = document.querySelector("#form__note-title");
+        const formNoteText = document.querySelector("#form__note-text");
+        const formButton = document.querySelector("#form__button");
+        const formWarning = document.querySelector("#form__warning");
+        const warningBox = document.querySelector(".warning-box");
+        const noNoteBox = document.querySelector(".no-note-box");
+        formButton.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (formNoteText.value || formNoteTitle.value) {
+                formWarning.classList.add("invisible");
+                addNote(formNoteTitle.value, formNoteText.value).then((response) => {
+                    createNoteElement(response);
+                    checkVisibleNotes(numVisibleNotes);
+                    toggleToolbarCheckbox();
+                    formNoteText.value = formNoteTitle.value = "";
+                    formNoteTitle.focus();
+                }, (error) => {
+                    window.alert(error);
+                });
+            } else {
+                formWarning.classList.remove("invisible");
+                formWarning.setAttribute("role", "alert");
+                setTimeout("formNoteTitle.focus()", 20);
+            }
+        });
+
+        /* Loading */
+        if (!window.indexedDB) {
+            warningBox.innerHTML = "Your browser doesn't support the software required for the notepad to run.";
+            warningBox.classList.remove("hidden");
+            warningBox.setAttribute("role", "alert");
+            warningBox.focus();
+        } else {
+            openDB();
+        }
+
+        /* test note adding */
+        function tmpAdd() {
+            let request = db.transaction("note", "readwrite").objectStore("note").add({title: "haha", text: "boo!"});
+            request.onsuccess = (e) => {
+                console.log(e.target.result);
+            };
+            console.log('aaaa');
+        }
+
+        /* Delete database */
+        function deleteDB() {
+            let request = indexedDB.deleteDatabase('NoteDB');
+            request.onsuccess = function () {
+                if(!window.alert("Deleted database successfully")) {
+                    window.location.reload();
+                }
+            };
+            request.onerror = function () {
+                window.alert("Couldn't delete database.");
+            };
+            request.onblocked = function () {
+                window.alert("Couldn't delete database due to the operation being blocked.");
+            };
+        }
+
+        /* Note toolbar behavior --- */
+        const noteToolbar = document.querySelector(".note-toolbar");
+        const noteToolbarCheckbox = document.querySelector(".note-toolbar__checkbox");
+        const noteToolbarCompleteButton = document.querySelector(".note-toolbar__complete-button");
+
+        var numCheckedBoxes = 0;
+
+        // Select all or de-select all
+        noteToolbarCheckbox.addEventListener("change", (e) => {
+            e.stopPropagation();
+            let noteListNoteCheckbox = document.querySelectorAll(".note-list__note__checkbox");
+            noteListNoteCheckbox.forEach((checkbox) => {
+                checkbox.checked = e.target.checked;
+            });
+            numCheckedBoxes = e.target.checked * noteListNoteCheckbox.length;
+            checkCompleteButtonVisibility();
+        });
+
+        // Check whether to show the complete button or not.
+        function checkCompleteButtonVisibility() {
+            numCheckedBoxes ? noteToolbarCompleteButton.classList.remove("invisible") : noteToolbarCompleteButton.classList.add("invisible");
+        }
+
+        function toggleToolbarCheckbox() {
+            noteToolbarCheckbox.checked = numCheckedBoxes === numVisibleNotes;
+        }
+
+        // add event listener for when a click happened within the noteList
+        noteList.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (e.target && e.target.nodeName === "INPUT") {
+                e.target.checked ? numCheckedBoxes++ : numCheckedBoxes--;
+            }
+            checkCompleteButtonVisibility();
+            toggleToolbarCheckbox();
+        });
+
+        noteToolbarCompleteButton.addEventListener("click", (e) => {
+            let checkedNoteCheckboxes = document.querySelectorAll(".note-list__note__checkbox:checked");
+            if (noteToolbarCheckbox.checked) {
+                deleteNote(null, true).then((success) => {
+                    while(noteList.lastElementChild) {
+                        noteList.removeChild(noteList.lastElementChild);
+                    }
+                    numVisibleNotes = numCheckedBoxes = 0;
+                    checkVisibleNotes();
+                    checkCompleteButtonVisibility();
+                }, (error) => {
+                    console.log(error);
+                    window.alert(error);
+                });
+            } else {
+                checkedNoteCheckboxes.forEach((checkbox) => {
+                    deleteNote(parseInt(checkbox.dataset.recordIndex)).then((success) => {
+                        noteList.removeChild(checkbox.parentNode);
+                        numVisibleNotes--;
+                        numCheckedBoxes--;
+                        console.log(numVisibleNotes);
+                        checkVisibleNotes();
+                        checkCompleteButtonVisibility();
+                    }, (error) => {
+                        console.log(error);
+                        window.alert(error);
+                    });
+                });
+            }
+        });
+        /* --- Note toolbar behavior */
+
+        /* Register Service Worker ---*/
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/The%20Web%20Developer%20Bootcamp/MDN%20Javascript%20Tutorial/API%20-%20IndexedDB%20Notepad/sw.js').then((response) => {
+                console.log("Service Worker Registered");
+            });
+        }
+    };
+
+
+</script>
+</body>
+</html>
