@@ -4,15 +4,15 @@
   "description": "",
   "main": "sw.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js"
   },
-  "repository": {
-
-  },
+  "repository": {},
   "author": "Tino Zhang",
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.3"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.0"
   }
 }
